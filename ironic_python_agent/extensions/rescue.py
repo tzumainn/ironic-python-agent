@@ -11,7 +11,8 @@
 # limitations under the License.
 
 import crypt
-import time
+import subprocess
+from threading import Timer
 
 from oslo_log import log
 
@@ -61,5 +62,10 @@ class RescueExtension(base.BaseAgentExtension):
         # IPA will terminate after the result of finalize_rescue is returned to
         # ironic to avoid exposing the IPA API to a tenant or public network
         self.agent.serve_api = False
-        time.sleep(300)
+        t = Timer(300, self.reset_network_interfaces)
+        t.start()
         return
+
+    def reset_network_interfaces(self):
+        subprocess.run(["sudo", "nmcli", "networking", "off"])
+        subprocess.run(["sudo", "nmcli", "networking", "on"])
